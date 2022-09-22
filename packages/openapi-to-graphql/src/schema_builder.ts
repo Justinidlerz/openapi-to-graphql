@@ -36,7 +36,7 @@ import {
   GraphQLInputType,
   GraphQLInputFieldConfigMap
 } from 'graphql'
-import GraphQLUpload from 'graphql-upload/GraphQLUpload'
+import { GraphQLUpload } from 'graphql-upload'
 
 // Imports:
 import { GraphQLBigInt, GraphQLJSON } from 'graphql-scalars'
