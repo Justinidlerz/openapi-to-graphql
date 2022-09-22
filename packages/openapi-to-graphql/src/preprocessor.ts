@@ -320,6 +320,7 @@ export function preprocessOas<TSource, TContext, TArgs>(
             options
           )
 
+
           if (typeof operationData === 'object') {
             /**
              * Handle operationId property name collision

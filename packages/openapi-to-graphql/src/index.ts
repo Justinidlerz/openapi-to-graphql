@@ -130,6 +130,8 @@ const DEFAULT_OPTIONS: InternalOptions<any, any, any> = {
   fetch: crossFetch,
 
   graphQLSchemaPrefix: '',
+
+  graphQLFieldPrefix: '',
 }
 
 /**
@@ -218,7 +220,8 @@ export function translateOpenAPIToGraphQL<TSource, TContext, TArgs>(
 
     fetch,
 
-    graphQLSchemaPrefix
+    graphQLSchemaPrefix,
+    graphQLFieldPrefix
   }: InternalOptions<TSource, TContext, TArgs>
 ): Result<TSource, TContext, TArgs> {
   const options = {
@@ -263,6 +266,7 @@ export function translateOpenAPIToGraphQL<TSource, TContext, TArgs>(
     fetch,
 
     graphQLSchemaPrefix,
+    graphQLFieldPrefix,
   }
   translationLog(`Options: ${JSON.stringify(options)}`)
 
@@ -524,7 +528,7 @@ function addQueryFields<TSource, TContext, TArgs>({
     )
   }
 
-  const generatedFieldName = operationIdFieldNames
+  let generatedFieldName = operationIdFieldNames
     ? saneOperationId // Sanitized (generated) operationId
     : singularNames
     ? Oas3Tools.sanitize(
@@ -536,6 +540,15 @@ function addQueryFields<TSource, TContext, TArgs>({
         // Generated type name (to be used as a field name)
         operation.responseDefinition.graphQLTypeName
       )
+
+  if (options.graphQLFieldPrefix) {
+    generatedFieldName = Oas3Tools.sanitize(
+        options.graphQLFieldPrefix + '-' + generatedFieldName,
+        Oas3Tools.CaseStyle.camelCase
+    )
+  }
+
+  console.log(generatedFieldName)
 
   /**
    * The name of the field
@@ -704,7 +717,7 @@ function addMutationFields<TSource, TContext, TArgs>({
     )
   }
 
-  const generatedFieldName = singularNames
+  let generatedFieldName = singularNames
     ? Oas3Tools.sanitize(
         // Generated singular name with HTTP method
         `${operation.method}${Oas3Tools.inferResourceNameFromPath(
@@ -713,6 +726,13 @@ function addMutationFields<TSource, TContext, TArgs>({
         Oas3Tools.CaseStyle.camelCase
       )
     : saneOperationId // (Generated) operationId (for mutations, operationId is guaranteed unique)
+
+  if (options.graphQLFieldPrefix) {
+    generatedFieldName = Oas3Tools.sanitize(
+        options.graphQLFieldPrefix + '-' + generatedFieldName,
+        Oas3Tools.CaseStyle.camelCase
+    )
+  }
 
   /**
    * The name of the field

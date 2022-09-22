@@ -93,6 +93,8 @@ export type Options<TSource, TContext, TArgs> = Partial<
 >
 
 export type InternalOptions<TSource, TContext, TArgs> = {
+  graphQLFieldPrefix: string;
+
   graphQLSchemaPrefix: string;
   /*
    * Adhere to the OAS as closely as possible. If set to true, any deviation
