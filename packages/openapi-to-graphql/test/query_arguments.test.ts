@@ -61,7 +61,10 @@ test('Query Arguments', () => {
     }
   }`
 
-  return graphql(createdSchema, query).then((result) => {
+  return graphql({
+    schema: createdSchema,
+    source: query
+  }).then((result) => {
     expect(result).toEqual({
       data: {
         todos: [{
