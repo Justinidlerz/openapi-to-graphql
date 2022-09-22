@@ -1,6 +1,6 @@
 {
   "name": "idler-openapi-to-graphql",
-  "version": "2.8.0",
+  "version": "2.8.1",
   "description": "Generates a GraphQL schema for a given OpenAPI Specification (OAS)",
   "copyright.owner": "IBM Corp.",
   "contributors": [
