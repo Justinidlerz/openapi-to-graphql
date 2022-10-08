@@ -548,8 +548,6 @@ function addQueryFields<TSource, TContext, TArgs>({
     )
   }
 
-  console.log(generatedFieldName)
-
   /**
    * The name of the field
    *
