@@ -751,7 +751,7 @@ export function createDataDef<TSource, TContext, TArgs>(
     return existingDataDef
   }
 
-  names = Object.fromEntries(Object.entries(names).map(([key, value]) => [key, value ? options.graphQLSchemaPrefix + '-' + value : value]))
+  names = Object.fromEntries(Object.entries(names).map(([key, value]) => [key, (value || value === '') ? options.graphQLSchemaPrefix + '-' + value : value]));
 
   // There is no preexisting data definition, so create a new one
 
