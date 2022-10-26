@@ -1160,7 +1160,7 @@ function skipArg<TSource, TContext, TArgs>(
               operation.oas.info.title
             )
 
-            if (typeof headers === 'object') {
+            if (typeof headers === 'object' && parameter.name in headers) {
               return true
             }
           }
