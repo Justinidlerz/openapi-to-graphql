@@ -461,7 +461,8 @@ function buildUrl(server: ServerObject): string {
  */
 export function sanitizeObjectKeys(
   obj: any, // obj does not necessarily need to be an object
-  caseStyle: CaseStyle = CaseStyle.camelCase
+  caseStyle: CaseStyle = CaseStyle.camelCase,
+  ignoreKeys?: string[]
 ): any {
   const cleanKeys = (obj: any): any => {
     // Case: no (response) data
@@ -477,10 +478,15 @@ export function sanitizeObjectKeys(
       const res: object = {}
 
       for (const key in obj) {
-        const saneKey = sanitize(key, caseStyle)
-
         if (Object.prototype.hasOwnProperty.call(obj, key)) {
-          res[saneKey] = cleanKeys(obj[key])
+          const saneKey = sanitize(key, caseStyle)
+
+          if (ignoreKeys?.includes(saneKey)) {
+            res[saneKey] = obj[key]
+          } else {
+            res[saneKey] = cleanKeys(obj[key])
+          }
+
         }
       }
 

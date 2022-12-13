@@ -27,6 +27,7 @@ import formurlencoded from 'form-urlencoded'
 import { PubSub } from 'graphql-subscriptions'
 import urljoin from 'url-join'
 import FormData from 'form-data'
+import { MapperKind, mapSchema } from '@graphql-tools/utils'
 
 const pubsub = new PubSub()
 
@@ -115,7 +116,7 @@ type OpenAPIToGraphQLSource<TSource, TContext, TArgs> = {
  * that contains subscribe to perform subscription and resolve to execute
  * payload transformation
  */
-export function getSubscribe<TSource, TContext, TArgs>({
+export function getSubscribe<TSource, TContext, TArgs> ({
   operation,
   payloadName,
   data,
@@ -241,7 +242,7 @@ export function getSubscribe<TSource, TContext, TArgs>({
  * triggered after a message has been published to the corresponding subscribe
  * topic(s) to execute payload transformation
  */
-export function getPublishResolver<TSource, TContext, TArgs>({
+export function getPublishResolver<TSource, TContext, TArgs> ({
   operation,
   responseName,
   data
@@ -342,7 +343,7 @@ export function getPublishResolver<TSource, TContext, TArgs>({
  * it could be:
  * abc_{$response.body#/employerId}
  */
-function inferLinkArguments<TSource, TContext, TArgs>({
+function inferLinkArguments<TSource, TContext, TArgs> ({
   paramName,
   value,
   resolveData,
@@ -351,7 +352,7 @@ function inferLinkArguments<TSource, TContext, TArgs>({
 }: inferLinkArgumentsParam<TSource, TContext, TArgs>)  {
   if (typeof value === 'object') {
     return Object.entries(value).reduce((acc, [key, value]) => {
-      acc[key] = inferLinkArguments({paramName, value, resolveData, source, args})
+      acc[key] = inferLinkArguments({ paramName, value, resolveData, source, args })
       return acc
     }, {})
   }
@@ -376,7 +377,7 @@ function inferLinkArguments<TSource, TContext, TArgs>({
  * If the operation type is Query or Mutation, create and return a resolver
  * function that performs API requests for the given GraphQL query
  */
-export function getResolver<TSource, TContext, TArgs>({
+export function getResolver<TSource, TContext, TArgs> ({
   operation,
   argsFromLink = {},
   payloadName,
@@ -421,6 +422,24 @@ export function getResolver<TSource, TContext, TArgs>({
      * from previous resolvers
      */
     let resolveData: Partial<ResolveData<TSource, TContext, TArgs>> = {}
+
+    const ignoreKeys: string[] = []
+
+    mapSchema(info.schema, {
+      [MapperKind.FIELD] (
+          fieldConfig,
+          fieldName
+      ) {
+        const graphQLType = fieldConfig.type
+
+        if ('name' in graphQLType && graphQLType.name === 'JSON') {
+          ignoreKeys.push(fieldName)
+        }
+
+        return fieldConfig
+      }
+    })
+
     if (
       source &&
       typeof source === 'object' &&
@@ -492,7 +511,7 @@ export function getResolver<TSource, TContext, TArgs>({
 
       let value = argsFromLink[paramName]
 
-      args[saneParamName] = inferLinkArguments({paramName, value, resolveData, source, args})
+      args[saneParamName] = inferLinkArguments({ paramName, value, resolveData, source, args })
     }
 
     // Stored used parameters to future requests:
@@ -831,7 +850,8 @@ export function getResolver<TSource, TContext, TArgs>({
               responseBody,
               !data.options.simpleNames
                 ? Oas3Tools.CaseStyle.camelCase
-                : Oas3Tools.CaseStyle.simple
+                : Oas3Tools.CaseStyle.simple,
+                ignoreKeys
             )
 
             // Pass on _openAPIToGraphQL to subsequent resolvers
@@ -947,7 +967,7 @@ export function getResolver<TSource, TContext, TArgs>({
   }
 }
 
-function headersToObject(headers: Headers) {
+function headersToObject (headers: Headers) {
   const headersObj: HeadersInit = {}
   headers.forEach((value, key) => {
     headersObj[key] = value
@@ -959,7 +979,7 @@ function headersToObject(headers: Headers) {
  * Attempts to create an object to become an OAuth query string by extracting an
  * OAuth token from the context based on the JSON path provided in the options.
  */
-function createOAuthQS<TSource, TContext, TArgs>(
+function createOAuthQS<TSource, TContext, TArgs> (
   data: PreprocessingData<TSource, TContext, TArgs>,
   context: TContext
 ): { [key: string]: string } {
@@ -968,7 +988,7 @@ function createOAuthQS<TSource, TContext, TArgs>(
     : extractToken(data, context)
 }
 
-function extractToken<TSource, TContext, TArgs>(
+function extractToken<TSource, TContext, TArgs> (
   data: PreprocessingData<TSource, TContext, TArgs>,
   context: TContext
 ) {
@@ -994,7 +1014,7 @@ function extractToken<TSource, TContext, TArgs>(
  * Attempts to create an OAuth authorization header by extracting an OAuth token
  * from the context based on the JSON path provided in the options.
  */
-function createOAuthHeader<TSource, TContext, TArgs>(
+function createOAuthHeader<TSource, TContext, TArgs> (
   data: PreprocessingData<TSource, TContext, TArgs>,
   context: TContext
 ): { [key: string]: string } {
@@ -1028,7 +1048,7 @@ function createOAuthHeader<TSource, TContext, TArgs>(
  * Return authHeader and authQs, which hold headers and query parameters
  * respectively to authentication a request.
  */
-function getAuthOptions<TSource, TContext, TArgs>(
+function getAuthOptions<TSource, TContext, TArgs> (
   operation: Operation,
   _openAPIToGraphQL: OpenAPIToGraphQLRoot<TSource, TContext, TArgs>,
   data: PreprocessingData<TSource, TContext, TArgs>
@@ -1120,7 +1140,7 @@ function getAuthOptions<TSource, TContext, TArgs>(
  * the (possibly multiple) authentication protocols can be used based on the
  * data present in the given context.
  */
-function getAuthReqAndProtcolName<TSource, TContext, TArgs>(
+function getAuthReqAndProtcolName<TSource, TContext, TArgs> (
   operation: Operation,
   _openAPIToGraphQL: OpenAPIToGraphQLRoot<TSource, TContext, TArgs>
 ): AuthReqAndProtcolName {
@@ -1160,7 +1180,7 @@ function getAuthReqAndProtcolName<TSource, TContext, TArgs>(
  * The link parameter or callback path is a reference to data contained in the
  * url/method/statuscode or response/request body/query/path/header
  */
-function resolveRuntimeExpression(
+function resolveRuntimeExpression (
   paramName: string,
   runtimeExpression: string,
   resolveData: any,
@@ -1267,7 +1287,7 @@ function resolveRuntimeExpression(
 /**
  * Check if a string is a runtime expression in the context of link parameters
  */
-function isRuntimeExpression(str: string): boolean {
+function isRuntimeExpression (str: string): boolean {
   if (str === '$url' || str === '$method' || str === '$statusCode') {
     return true
   } else if (str.startsWith('$request.')) {
@@ -1293,7 +1313,7 @@ function isRuntimeExpression(str: string): boolean {
  *
  * Used to store and retrieve the _openAPIToGraphQL of parent field
  */
-function getIdentifier(info): string {
+function getIdentifier (info): string {
   return getIdentifierRecursive(info.path)
 }
 
@@ -1301,14 +1321,14 @@ function getIdentifier(info): string {
  * From the info object provided by the resolver, get the unique identifier of
  * the parent object
  */
-function getParentIdentifier(info): string {
+function getParentIdentifier (info): string {
   return getIdentifierRecursive(info.path.prev)
 }
 
 /**
  * Get the path of nested field names (or aliases if provided)
  */
-function getIdentifierRecursive(path): string {
+function getIdentifierRecursive (path): string {
   return typeof path.prev === 'undefined'
     ? path.key
     : /**
@@ -1325,7 +1345,7 @@ function getIdentifierRecursive(path): string {
 /**
  * Create a new GraphQLError with an extensions field
  */
-function graphQLErrorWithExtensions(
+function graphQLErrorWithExtensions (
   message: string,
   extensions: { [key: string]: any }
 ): GraphQLError {
@@ -1338,7 +1358,7 @@ function graphQLErrorWithExtensions(
  * Replaces the path parameter in the given path with values in the given args.
  * Furthermore adds the query parameters for a request.
  */
-export function extractRequestDataFromArgs<TSource, TContext, TArgs>(
+export function extractRequestDataFromArgs<TSource, TContext, TArgs> (
   path: string,
   parameters: ParameterObject[],
   args: TArgs, // NOTE: argument keys are sanitized!
